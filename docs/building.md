@@ -4,9 +4,9 @@ The add-ins are generated from three VBA modules in `src/`:
 
 | Module | Role |
 |---|---|
-| `SankeyCore.bas` | Layout engine and drawing, shared by both hosts (uses only the Office `Shapes` object model) |
-| `SankeyExcel.bas` | Excel entry points: selection reading, `Sankey_Options` sheet, example, ribbon callbacks |
-| `SankeyPowerPoint.bas` | PowerPoint entry points: table or text reading, `Sankey_Options` box, example, ribbon callbacks |
+| `SankeyCore.bas` | Style settings, layout engine and drawing, shared by both hosts (uses only the Office `Shapes` object model); also the ribbon control to option mapping |
+| `SankeyExcel.bas` | Excel entry points: range reading, in-place update, example, ribbon callbacks |
+| `SankeyPowerPoint.bas` | PowerPoint entry points: table or text reading, in-place update, example, ribbon callbacks |
 
 ## How the binary project is produced
 
@@ -21,6 +21,13 @@ mechanism produces the Excel and the PowerPoint projects.
 for the `.ppam` (`application/vnd.ms-powerpoint.addin.macroEnabled.main+xml`), the relationship
 to `vbaProject.bin` and the ribbon definition `customUI/customUI14.xml`. Macro-enabled test
 documents (`.xlsm`, `.pptm`) are produced the same way.
+
+## Previewing the layout without Office
+
+`python3 build/test_layout.py > layout.txt` compiles the sources in LibreOffice and prints the
+computed layouts of the test data sets (`tests/SkTest.bas`); `python3 build/preview_svg.py
+layout.txt out/` renders them as SVG files, which is a quick way to check the appearance of a
+layout change. Drawing itself (freeforms, text boxes, the ribbon) can only be tested in Office.
 
 ## Requirements
 

@@ -31,12 +31,22 @@ Known causes are fixed in version 1.1 and later: reserved identifiers and non-AS
 Update to version 1.1 or later; sources are pure ASCII and accents are generated at run time.
 
 **Labels overlap.**
-Increase `height`, reduce `font_size`, set `labels = name` or `label_lines = 1`, enable
-`label_background`, or increase `node_padding`. For dense diagrams consider `link_values = no`.
+Labels are measured on the real text, so this only happens in very dense diagrams or when a
+diagram was resized much smaller. Enlarge the group and click **Update**, choose a smaller
+label size, `Name only` labels, or enable **Label background**.
 
 **The diagram is too small or in the wrong place.**
-Excel: set `width` and `height` in the `Sankey_Options` sheet. PowerPoint: set `left`, `top`,
-`width`, `height` in the options box. The group can also be resized by hand.
+Move or resize the group by hand, then click **Update**: the diagram is redrawn at the new
+size (in PowerPoint the text is reduced to fit when needed).
+
+**A ribbon change did nothing.**
+Style controls act on the *selected* diagram (click on it first) and on the next diagrams
+drawn. Text boxes (Title, Subtitle, Sections, Unit) apply when you press Enter.
+
+**Update says the source table was not found.**
+The diagram remembers the sheet and range (Excel) or the slide shape (PowerPoint) it was drawn
+from. If the table was moved, deleted or renamed, select the table and click **Draw Sankey**
+again.
 
 **A node is in the wrong column.**
 Use the Source column / Target column data columns (0 = first column) to pin it, or set

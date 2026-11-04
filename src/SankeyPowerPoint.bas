@@ -2,7 +2,7 @@ Option Explicit
 ' =====================================================================
 '  ZenSankey - native-shape Sankey diagrams for Excel and PowerPoint
 '  SankeyPowerPoint: PowerPoint entry points (ribbon callbacks, table or
-'  text reading, options text box, example table).
+'  text reading, in-place update of a diagram, example table).
 '
 '  Copyright (c) 2026 Samuel Mellot
 '  Licensed under the Apache License, Version 2.0. See LICENSE and NOTICE.
@@ -10,13 +10,17 @@ Option Explicit
 
 Private Const PP_SELECTION_SHAPES As Long = 2
 Private Const PP_SELECTION_TEXT As Long = 3
-Private Const OPTIONS_SHAPE As String = "Sankey_Options"
+Private Const META_TAG As String = "ZenSankey"
+Public gRibbon As IRibbonUI
 
-' Draws a Sankey from the selected table (Source | Target | Amount ...) or text box ("Source [amount] Target" per line)
+' Draws a Sankey from the selected table (Source | Target | Amount ...) or text box ("Source [amount] Target" per line).
+' If a ZenSankey diagram is selected instead, it is redrawn with the current style.
 Public Sub DrawSankey()
     Dim sel As Object, shp As Object, sld As Object, grp As Object
-    Dim L As Single, T As Single, W As Single, H As Single, slW As Single, slH As Single, ok As Boolean
+    Dim L As Single, T As Single, W As Single, H As Single, slW As Single, slH As Single
     On Error GoTo Failed
+    Set grp = SelectedDiagram()
+    If Not grp Is Nothing Then UpdateDiagram grp: Exit Sub
     Set sel = Application.ActiveWindow.Selection
     If sel.Type <> PP_SELECTION_SHAPES And sel.Type <> PP_SELECTION_TEXT Then
         MsgBox "Select a table (Source | Target | Amount) or a text box with one flow per line (Source [amount] Target) first.", vbExclamation, "ZenSankey"
@@ -25,12 +29,8 @@ Public Sub DrawSankey()
     Set shp = sel.ShapeRange(1)
     Set sld = shp.Parent
     SkReset
-    If shp.HasTable Then
-        ok = ReadTable(shp.Table)
-    ElseIf shp.HasTextFrame Then
-        ok = ReadText(shp.TextFrame.TextRange.Text)
-    End If
-    If Not ok Or SkLinkCount = 0 Then
+    ReadShape shp
+    If SkLinkCount = 0 Then
         MsgBox "No valid flow found. Expected: a table with three columns Source | Target | Amount, or text lines such as Source [amount] Target.", vbExclamation, "ZenSankey"
         Exit Sub
     End If
@@ -43,84 +43,129 @@ Public Sub DrawSankey()
     Else
         T = 90: H = slH - 130
     End If
-    ApplyOptionsShape sld, L, T, W, H
-    Set grp = SkDraw(sld.Shapes, L, T, W, H, "")
+    Set grp = SkDraw(sld.Shapes, L, T, W, H, "", False)
+    grp.AlternativeText = MetaText(sld, shp.Name, grp)
     grp.Select
     Exit Sub
 Failed:
     MsgBox "The Sankey could not be drawn: " & Err.Description, vbCritical, "ZenSankey"
 End Sub
 
-' Reads the options text box named Sankey_Options on the slide, if present
-Private Sub ApplyOptionsShape(ByVal sld As Object, ByRef L As Single, ByRef T As Single, ByRef W As Single, ByRef H As Single)
-    Dim s As Object, txt As String, rows() As String, i As Long, p As Long, k As String, v As String, rest As String
-    On Error Resume Next
-    Set s = sld.Shapes(OPTIONS_SHAPE)
-    On Error GoTo 0
-    If s Is Nothing Then Exit Sub
-    If Not s.HasTextFrame Then Exit Sub
-    txt = s.TextFrame.TextRange.Text
-    txt = Replace(txt, vbCrLf, vbCr): txt = Replace(txt, vbLf, vbCr): txt = Replace(txt, ChrW(11), vbCr)
-    rows = Split(txt, vbCr)
-    For i = 0 To UBound(rows)
-        p = InStr(rows(i), "=")
-        If p > 1 Then
-            k = LCase$(Trim$(Left$(rows(i), p - 1))): v = Trim$(Mid$(rows(i), p + 1))
-            Select Case k
-                Case "left": If Len(v) > 0 Then L = ParseNumber(v)
-                Case "top": If Len(v) > 0 Then T = ParseNumber(v)
-                Case "width": If ParseNumber(v) > 50 Then W = ParseNumber(v)
-                Case "height": If ParseNumber(v) > 50 Then H = ParseNumber(v)
-                Case Else: rest = rest & rows(i) & vbCr
-            End Select
-        End If
-    Next i
-    SkApplyOptionText rest
+' Reads the flows of a table or text shape into the engine
+Private Sub ReadShape(ByVal shp As Object)
+    If shp.HasTable Then
+        ReadTable shp.Table
+    ElseIf shp.HasTextFrame Then
+        ReadText shp.TextFrame.TextRange.Text
+    End If
 End Sub
 
-' Inserts (or selects) the Sankey_Options text box next to the current slide, listing every option
-Public Sub InsertOptionsBox()
-    Dim sld As Object, s As Object, lst As Variant, i As Long, parts() As String, txt As String, slW As Single
-    On Error GoTo Failed
-    Set sld = Application.ActiveWindow.View.Slide
-    slW = Application.ActivePresentation.PageSetup.SlideWidth
+' Metadata stored with the diagram: source shape, size and style (so that it can be redrawn)
+Private Function MetaText(ByVal sld As Object, ByVal srcName As String, ByVal grp As Object) As String
+    MetaText = META_TAG & " 2.1" & vbLf & "slide=" & sld.SlideID & vbLf & "shape=" & srcName & vbLf & _
+               "size=" & Format$(SkDrawnWidth(), "0.0") & ";" & Format$(SkDrawnHeight(), "0.0") & vbLf & _
+               "box=" & Format$(grp.Width, "0.0") & ";" & Format$(grp.Height, "0.0") & vbLf & _
+               "style:" & vbLf & SkSettingsText()
+End Function
+
+Private Function MetaValue(ByVal meta As String, ByVal key As String) As String
+    Dim rows() As String, i As Long
+    meta = Replace(meta, vbCrLf, vbLf): meta = Replace(meta, vbCr, vbLf)
+    rows = Split(meta, vbLf)
+    For i = 0 To UBound(rows)
+        If Left$(rows(i), Len(key) + 1) = key & "=" Then MetaValue = Mid$(rows(i), Len(key) + 2): Exit Function
+        If rows(i) = "style:" Then Exit Function
+    Next i
+End Function
+
+Private Function MetaStyle(ByVal meta As String) As String
+    Dim p As Long
+    meta = Replace(meta, vbCrLf, vbLf): meta = Replace(meta, vbCr, vbLf)
+    p = InStr(meta, "style:" & vbLf)
+    If p > 0 Then MetaStyle = Mid$(meta, p + 7)
+End Function
+
+' The ZenSankey group currently selected (or containing the selected shape), or Nothing
+Public Function SelectedDiagram() As Object
+    Dim sel As Object, s As Object, p As Object, k As Long
     On Error Resume Next
-    Set s = sld.Shapes(OPTIONS_SHAPE)
+    Set sel = Application.ActiveWindow.Selection
+    If sel Is Nothing Then Exit Function
+    If sel.Type <> PP_SELECTION_SHAPES Then Exit Function
+    Set s = sel.ShapeRange(1)
+    For k = 1 To 6
+        If s Is Nothing Then Exit Function
+        If Left$(s.AlternativeText, Len(META_TAG)) = META_TAG Then Set SelectedDiagram = s: Exit Function
+        Set p = Nothing
+        Set p = s.ParentGroup
+        If p Is Nothing Then Exit Function
+        Set s = p
+    Next k
+End Function
+
+' Redraws a diagram from its source table or text box, at the same place, with the current style
+Public Sub UpdateDiagram(ByVal grp As Object)
+    Dim sld As Object, src As Object, meta As String, srcName As String
+    Dim L As Single, T As Single, W As Single, H As Single, parts() As String, newGrp As Object, sameBox As Boolean
     On Error GoTo Failed
-    If Not s Is Nothing Then
-        s.Select
-        MsgBox "The options box already exists on this slide (selected). Edit its lines; they apply to the next Sankey drawn on this slide.", vbInformation, "ZenSankey"
+    meta = grp.AlternativeText
+    srcName = MetaValue(meta, "shape")
+    Set sld = grp.Parent
+    Set src = Nothing
+    On Error Resume Next
+    Set src = sld.Shapes(srcName)
+    On Error GoTo Failed
+    If src Is Nothing Then
+        MsgBox "The source table of this diagram (" & srcName & ") was not found on the slide. Select the table and click Draw Sankey.", vbExclamation, "ZenSankey"
         Exit Sub
     End If
-    txt = "' ZenSankey options - one key = value per line, applies to this slide" & vbCr
-    txt = txt & "' left = 36" & vbCr & "' top = 90" & vbCr & "' width = " & Format$(slW - 72, "0") & vbCr & "' height = 360" & vbCr
-    lst = SkOptionsList()
-    For i = LBound(lst) To UBound(lst)
-        parts = Split(lst(i), "|")
-        txt = txt & parts(0) & " = " & parts(1)
-        If Len(parts(3)) > 0 Then txt = txt & "    ' " & Replace(parts(3), ",", " | ") Else txt = txt & "    ' " & parts(2)
-        txt = txt & vbCr
-    Next i
-    Set s = sld.Shapes.AddTextbox(1, slW + 24, 20, 420, 500)
-    With s
-        .Name = OPTIONS_SHAPE
-        .Fill.Visible = -1: .Fill.ForeColor.RGB = RGB(255, 255, 230)
-        .Line.Visible = -1: .Line.ForeColor.RGB = RGB(2, 128, 144)
-        .TextFrame.WordWrap = 0
-        .TextFrame.AutoSize = 1
-        .TextFrame.TextRange.Text = txt
-        .TextFrame.TextRange.Font.Name = "Consolas"
-        .TextFrame.TextRange.Font.Size = 9
-    End With
-    s.Select
-    MsgBox "An options box named " & OPTIONS_SHAPE & " was added to the right of the slide (outside the slide, so it is not shown in slide shows)." & vbCrLf & _
-           "Edit the values after the = signs; lines starting with ' are comments. Remove the quote before left/top/width/height to set the position and size.", vbInformation, "ZenSankey"
+    SkReset
+    ReadShape src
+    If SkLinkCount = 0 Then
+        MsgBox "No valid flow found in " & srcName & ".", vbExclamation, "ZenSankey"
+        Exit Sub
+    End If
+    L = grp.Left: T = grp.Top
+    W = grp.Width + 16: H = grp.Height + 16
+    sameBox = False
+    parts = Split(MetaValue(meta, "box"), ";")
+    If UBound(parts) = 1 Then
+        If Abs(ParseNumber(parts(0)) - grp.Width) < 1 And Abs(ParseNumber(parts(1)) - grp.Height) < 1 Then sameBox = True
+    End If
+    If sameBox Then
+        parts = Split(MetaValue(meta, "size"), ";")
+        If UBound(parts) = 1 Then W = ParseNumber(parts(0)): H = ParseNumber(parts(1))
+    End If
+    grp.Delete
+    Set newGrp = SkDraw(sld.Shapes, L, T, W, H, "", False)
+    newGrp.AlternativeText = MetaText(sld, srcName, newGrp)
+    newGrp.Select
     Exit Sub
 Failed:
-    MsgBox "The options box could not be created: " & Err.Description, vbCritical, "ZenSankey"
+    MsgBox "The diagram could not be updated: " & Err.Description, vbCritical, "ZenSankey"
 End Sub
 
-' Inserts an example table on the current slide
+' Loads the style stored with the selected diagram (if any) into the engine
+Private Function LoadSelectedStyle() As Object
+    Dim grp As Object, st As String
+    Set grp = SelectedDiagram()
+    If grp Is Nothing Then Exit Function
+    st = MetaStyle(grp.AlternativeText)
+    If Len(st) > 0 Then SkApplyOptionText st
+    Set LoadSelectedStyle = grp
+End Function
+
+Private Sub AfterStyleChange(ByVal grp As Object)
+    If Not grp Is Nothing Then UpdateDiagram grp
+    RefreshRibbon
+End Sub
+
+Private Sub RefreshRibbon()
+    On Error Resume Next
+    If Not gRibbon Is Nothing Then gRibbon.Invalidate
+End Sub
+
+' Inserts an example table on the current slide and draws it
 Public Sub InsertExample()
     Dim sld As Object, tb As Object, d As Variant, i As Long, j As Long, slW As Single
     On Error GoTo Failed
@@ -137,15 +182,15 @@ Public Sub InsertExample()
         Array("Operating expenses", "General & admin", "70", "#E34948"), _
         Array("Operating profit", "Taxes", "60", "#E34948"), _
         Array("Operating profit", "Net profit", "190", "#1BAF7A"))
-    Set tb = sld.Shapes.AddTable(UBound(d) + 1, 4, 36, 60, slW / 2 - 50, 20 * (UBound(d) + 1))
+    Set tb = sld.Shapes.AddTable(UBound(d) + 1, 4, 36, 40, slW / 2 - 50, 16 * (UBound(d) + 1))
     For i = 0 To UBound(d)
         For j = 0 To 3
             tb.Table.Cell(i + 1, j + 1).Shape.TextFrame.TextRange.Text = d(i)(j)
-            tb.Table.Cell(i + 1, j + 1).Shape.TextFrame.TextRange.Font.Size = 10
+            tb.Table.Cell(i + 1, j + 1).Shape.TextFrame.TextRange.Font.Size = 9
         Next j
     Next i
     tb.Select
-    MsgBox "Example table inserted and selected: click Draw Sankey. You can also paste cells copied from Excel (PowerPoint tables are recognized).", vbInformation, "ZenSankey"
+    DrawSankey
     Exit Sub
 Failed:
     MsgBox "The example could not be inserted: " & Err.Description, vbCritical, "ZenSankey"
@@ -155,34 +200,85 @@ Public Sub ShowHelp()
     MsgBox "ZenSankey for PowerPoint" & vbCrLf & vbCrLf & _
            "1. Insert a table Source | Target | Amount (Insert > Table, or paste Excel cells), or a text box with one flow per line: Source [amount] Target." & vbCrLf & _
            "2. Select the table or the text box, then click Draw Sankey." & vbCrLf & _
-           "3. Click Options to add an options box next to the slide: palette, colors, link shape, labels, titles, section titles, position and size..." & vbCrLf & _
-           "4. The diagram is a group of native shapes: move it, resize it, change colors and fonts. Delete the source table if you wish." & vbCrLf & vbCrLf & _
+           "3. Adjust the style with the ribbon controls (palette, links, labels, titles...): a selected diagram is updated immediately." & vbCrLf & _
+           "4. Update redraws the selected diagram after the table changed. Reset style restores the defaults." & vbCrLf & _
+           "5. The diagram is a group of native shapes: move it, resize it, change colors and fonts. Keep the source table (it can be moved off the slide) if you want to update the diagram later." & vbCrLf & vbCrLf & _
            "Optional table columns: Color (#RRGGBB), Source column, Target column (0 = first column).", vbInformation, "ZenSankey"
 End Sub
 
 ' ---- Ribbon callbacks --------------------------------------------------
+Public Sub Ribbon_OnLoad(ribbon As IRibbonUI)
+    Set gRibbon = ribbon
+End Sub
+
 Public Sub Ribbon_Draw(control As IRibbonControl)
     DrawSankey
+End Sub
+
+Public Sub Ribbon_Update(control As IRibbonControl)
+    Dim grp As Object
+    Set grp = SelectedDiagram()
+    If grp Is Nothing Then
+        MsgBox "Select a ZenSankey diagram first (click on it), then Update.", vbExclamation, "ZenSankey"
+    Else
+        UpdateDiagram grp
+    End If
 End Sub
 
 Public Sub Ribbon_Example(control As IRibbonControl)
     InsertExample
 End Sub
 
-Public Sub Ribbon_Options(control As IRibbonControl)
-    InsertOptionsBox
-End Sub
-
 Public Sub Ribbon_Help(control As IRibbonControl)
     ShowHelp
 End Sub
 
+Public Sub Ribbon_Reset(control As IRibbonControl)
+    Dim grp As Object
+    Set grp = SelectedDiagram()
+    SkResetStyle
+    AfterStyleChange grp
+End Sub
+
+Public Sub Ribbon_DropDown(control As IRibbonControl, id As String, index As Integer)
+    Dim grp As Object
+    Set grp = LoadSelectedStyle()
+    SkRibbonSelect control.Id, index
+    AfterStyleChange grp
+End Sub
+
+Public Sub Ribbon_DropDownIndex(control As IRibbonControl, ByRef index As Variant)
+    index = SkRibbonIndex(control.Id)
+End Sub
+
+Public Sub Ribbon_Check(control As IRibbonControl, pressed As Boolean)
+    Dim grp As Object
+    Set grp = LoadSelectedStyle()
+    SkRibbonSetPressed control.Id, pressed
+    AfterStyleChange grp
+End Sub
+
+Public Sub Ribbon_CheckState(control As IRibbonControl, ByRef returnValue As Variant)
+    returnValue = SkRibbonPressed(control.Id)
+End Sub
+
+Public Sub Ribbon_EditChange(control As IRibbonControl, text As String)
+    Dim grp As Object
+    Set grp = LoadSelectedStyle()
+    SkRibbonSetText control.Id, text
+    AfterStyleChange grp
+End Sub
+
+Public Sub Ribbon_EditText(control As IRibbonControl, ByRef returnedVal As Variant)
+    returnedVal = SkRibbonText(control.Id)
+End Sub
+
 ' ---- Data reading --------------------------------------------------------
-Private Function ReadTable(ByVal tbl As Object) As Boolean
+Private Sub ReadTable(ByVal tbl As Object)
     Dim r As Long, r0 As Long, nR As Long, nC As Long, src As String, dst As String, v As Double
     Dim colHex As String, cs As Long, cd As Long, t3 As String
     nR = tbl.Rows.Count: nC = tbl.Columns.Count
-    If nC < 3 Then Exit Function
+    If nC < 3 Then Exit Sub
     r0 = 1
     t3 = Trim$(CellText(tbl, 1, 3))
     If ParseNumber(t3) = 0 Then r0 = 2
@@ -195,8 +291,7 @@ Private Function ReadTable(ByVal tbl As Object) As Boolean
         If nC >= 6 Then If Len(Trim$(CellText(tbl, r, 6))) > 0 Then cd = CLng(ParseNumber(CellText(tbl, r, 6)))
         If Len(src) > 0 And Len(dst) > 0 And v > 0 Then SkAddLink src, dst, v, colHex, cs, cd
     Next r
-    ReadTable = True
-End Function
+End Sub
 
 Private Function CellText(ByVal tbl As Object, ByVal r As Long, ByVal c As Long) As String
     On Error Resume Next
@@ -204,7 +299,7 @@ Private Function CellText(ByVal tbl As Object, ByVal r As Long, ByVal c As Long)
 End Function
 
 ' Free text: "Source [amount] Target" (SankeyMATIC syntax), "Source ; Target ; amount", tabs or commas
-Private Function ReadText(ByVal txt As String) As Boolean
+Private Sub ReadText(ByVal txt As String)
     Dim rows() As String, i As Long, ln As String, p1 As Long, p2 As Long, parts() As String, sep As String
     Dim src As String, dst As String, v As Double
     txt = Replace(txt, vbCrLf, vbCr): txt = Replace(txt, vbLf, vbCr): txt = Replace(txt, ChrW(11), vbCr)
@@ -233,5 +328,4 @@ Private Function ReadText(ByVal txt As String) As Boolean
             If Len(src) > 0 And Len(dst) > 0 And v > 0 Then SkAddLink src, dst, v
         End If
     Next i
-    ReadText = True
-End Function
+End Sub

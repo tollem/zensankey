@@ -16,13 +16,13 @@ copy from Excel to PowerPoint without losing anything.
 - **Native shapes**: every band, node and label is editable; the whole diagram is one group.
 - Automatic layout: columns from the flow structure, sinks pushed to the right, node ordering
   that reduces crossings, proportional heights, optional forced columns.
-- **Styling options**: five palettes plus custom colors, color by node or by column,
-  gradient / source / target / gray / fixed link colors, opacity, outline, curved or straight
-  links, node width and padding, rounded nodes.
-- **Text**: font, size and color, labels on one or two lines, labels outside the diagram for
-  the first and last columns, translucent label backgrounds, values on the bands, value formats
-  (standard, thousands, millions, percent), decimals and unit.
-- **Titles**: title, subtitle and section titles above each column; optional background.
+- **Good-looking by default**: flat translucent bands, colors that follow the main flow
+  (branches get their own accent color), labels measured on the real text so nothing overlaps,
+  balanced column spacing.
+- **Style from the ribbon**: palette, colors, band color and opacity, shape, node width,
+  labels, font, number format, unit, title, subtitle, section titles, background... Every
+  change is applied immediately to the selected diagram. No settings sheet, no code.
+- **Update**: change the table, click Update, the diagram is redrawn in place.
 - Tolerant number parsing (`3 000`, `3'000`, `2 650,5`, `1,234.5`).
 - Windows and macOS, Office 2016 and later (Microsoft 365 included). No installation of anything
   else, no administrator rights.
@@ -65,11 +65,11 @@ Download `ZenSankey.xlam` and `ZenSankey.ppam` from the [`dist`](dist) folder or
 
 The `dist` folder also contains `ZenSankey-test.xlsm` and `ZenSankey-test.pptm`: a
 workbook and a presentation that embed the same macros and ribbon. Open one, enable macros,
-and use the **Sankey** tab.
+and use the **ZenSankey** tab.
 
 ### If macros are blocked
 
-Organisations often restrict macros. If the Sankey tab does not appear or the buttons do
+Organisations often restrict macros. If the ZenSankey tab does not appear or the buttons do
 nothing, add the folder that contains the add-ins to the **Trusted Locations**
 (File > Options > Trust Center > Trust Center Settings > Trusted Locations), or ask your IT
 department. The add-ins contain no external calls and no network access; the source code is in
@@ -80,59 +80,59 @@ department. The add-ins contain no external calls and no network access; the sou
 ### Excel
 
 1. Build a table with one row per flow: **Source | Target | Amount**. A header row is optional.
-   Three optional columns can follow: **Color** (`#RRGGBB`, forces the color of that band),
-   **Source column** and **Target column** (0 = first column; forces the horizontal position
-   of a node).
-2. Select the table and click **Sankey > Draw Sankey**. The diagram appears to the right of the
-   selection as a group named `Sankey hhmmss`.
-3. Click **Sankey > Options** once to add a `Sankey_Options` sheet to the workbook. Edit the
-   values in column B (drop-down lists where relevant) and draw again. `width` and `height`
-   set the size of the diagram in points.
-4. **Example** inserts a sample table (income statement) at the active cell.
+   Three optional columns can follow: **Color** (`#RRGGBB`, forces the color of that band and
+   of its target node), **Source column** and **Target column** (0 = first column; forces the
+   horizontal position of a node).
+2. Select the table and click **ZenSankey > Draw Sankey**. The diagram appears to the right of
+   the selection as a group named `Sankey hhmmss`, sized so that every label fits.
+3. Adjust the look with the ribbon controls (see below) while the diagram is selected: it is
+   redrawn immediately. **Example** inserts a sample table (income statement) and draws it.
+4. After changing the table, select the diagram and click **Update**.
 
 ### PowerPoint
 
 1. Insert a table with the same columns (**Insert > Table**, or paste cells copied from Excel),
    or a text box with one flow per line in the form `Source [amount] Target`
    (`Source ; Target ; amount` and tab-separated lines also work).
-2. Select the table or the text box and click **Sankey > Draw Sankey**. The diagram is placed
-   below the table when there is room, otherwise in the content area of the slide.
-3. Click **Sankey > Options** to add an options box named `Sankey_Options` next to the slide
-   (outside the slide, so it is not shown during the slide show). Edit the lines
-   `key = value`; `left`, `top`, `width`, `height` set the position and size.
+2. Select the table or the text box and click **ZenSankey > Draw Sankey**. The diagram is placed
+   below the table when there is room, otherwise in the content area of the slide; the text is
+   scaled down if needed so that the diagram fits the slide.
+3. Adjust the look with the ribbon controls while the diagram is selected. Keep the source table
+   (it can be moved off the slide) if you want to use **Update** later.
 
-### Updating a diagram
+### Editing the result
 
-Draw again from the (modified) table and delete the previous group. Because the result is a
-plain group of shapes, you can also edit it directly: move labels, change a color, enlarge
-the group.
+The diagram is a plain group of shapes: resize it, move labels, change a color, copy it into
+another document. Resizing the group and clicking **Update** redraws it at the new size.
 
-## Options
+## Ribbon controls
 
-All options have sensible defaults; set only what you need. The full reference with examples
-is in [`docs/options.md`](docs/options.md).
-
-| Key | Default | What it does |
+| Group | Control | Effect |
 |---|---|---|
-| `title`, `subtitle` | | Texts above the diagram |
-| `column_titles` | | Section titles above each column, separated by `;` |
-| `palette` | `Teal` | `Teal`, `Vivid`, `Pastel`, `Muted`, `Ocean`, `Custom` |
-| `colors` | | Custom colors `#RRGGBB;#RRGGBB;…` (with `palette = Custom`) |
-| `color_by` | `node` | Palette assignment: `node` or `column` |
-| `node_color` | `palette` | `palette`, `gray` or `#RRGGBB` |
-| `link_color` | `gradient` | `gradient`, `source`, `target`, `gray` or `#RRGGBB` |
-| `link_shape`, `curvature` | `curved`, `0.5` | Band shape |
-| `link_opacity`, `link_outline` | `55`, `no` | Band opacity in %, white outline |
-| `node_width`, `node_padding`, `rounded_nodes` | `14`, `14`, `no` | Node geometry |
-| `font`, `font_size`, `text_color` | `Arial`, `10`, `#1C2B2D` | Text style |
-| `labels`, `label_lines` | `name_value`, `2` | Label content and layout |
-| `outside_labels`, `label_background` | `yes`, `no` | Label placement and readability |
-| `link_values` | `no` | Amount written on bands that are tall enough |
-| `value_format`, `decimals`, `unit` | `standard`, `0`, | `standard`, `k`, `M`, `percent` |
-| `background`, `background_color` | `no`, `#F7FBFB` | Rounded background |
-| `alignment`, `order`, `margin` | `justify`, `auto`, `8` | Layout rules |
+| Diagram | **Draw Sankey** | Draws from the selected table; with a diagram selected, redraws it |
+| | **Update** | Redraws the selected diagram from its source table with the current style |
+| | **Example** | Inserts a sample table and draws it |
+| Style | Palette | `Teal` (default), `Vivid`, `Pastel`, `Muted`, `Ocean`, `Warm`, `Mono` |
+| | Colors | `Follow the flow` (a node keeps the color of its main source, branches get new colors), `One per node`, `One per column` |
+| | Links | Band color: `Target color` (default), `Source color`, `Gradient`, `Gray` |
+| | Opacity | Band opacity, 25 % to 100 % (default 45 %) |
+| | Shape | `Curved`, `Soft curve`, `Straight` |
+| | Nodes | Node bar width: thin to extra wide |
+| | Rounded nodes, Band outline | Rounded node corners; thin white outline around bands |
+| Labels | Show | `Name and value`, `Name only`, `Value only`, `No labels` |
+| | Size, Font | Label font size (8 to 18) and font |
+| | Format, Decimals, Unit | `Standard`, `Thousands (k)`, `Millions (M)`, `Percent` (of the first column); decimals; unit text |
+| | Outside labels | Labels of the first and last columns outside the band area |
+| | Values on bands | Amount written on bands that are tall enough |
+| | Label background | Translucent white box behind labels |
+| Titles | Title, Subtitle, Sections | Title, subtitle and section titles above the columns (separated by `;`, e.g. `Sources;Allocation;Result`); press Enter to apply |
+| | Background | Light rounded background behind the diagram |
+| More | Order | Vertical order of the nodes: automatic (fewer crossings) or as in the table |
+| | **Reset style** | Back to the defaults |
 
-Booleans accept `yes`/`no`, `true`/`false`, `1`/`0` (and `oui`/`non`).
+The style is stored with each diagram, so selecting an old diagram and changing one control
+keeps its other settings. The full list of style keys (also usable from VBA through
+`SkSetOption`) is in [`docs/options.md`](docs/options.md).
 
 ## Building from source
 

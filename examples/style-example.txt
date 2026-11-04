@@ -1,0 +1,12 @@
+' ZenSankey style example: the same keys the ribbon sets, one per line. Apply from VBA with
+' SkApplyOptionText (see docs/options.md); the ribbon stores this text with each diagram.
+title = Where the revenue goes
+subtitle = Example data, k CHF
+column_titles = Revenue;Gross profit;Operating;Result
+palette = Teal
+color_by = flow
+link_color = target
+link_opacity = 45
+outside_labels = yes
+value_format = standard
+unit = k

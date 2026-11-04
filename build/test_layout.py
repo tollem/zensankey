@@ -35,7 +35,7 @@ def main():
     libs = doc.BasicLibraries
     libs.createLibrary("ZenSankey"); lib = libs.getByName("ZenSankey")
     for name, path in mods:
-        src = open(os.path.join(ROOT, path), encoding="ascii").read().replace("IRibbonControl", "Object")
+        src = open(os.path.join(ROOT, path), encoding="ascii").read().replace("IRibbonControl", "Object").replace("IRibbonUI", "Object")
         lib.insertByName(name, "Option VBASupport 1\n" + src)
         info = ModuleInfo(); info.ModuleType = 1; lib.insertModuleInfo(name, info)
     libs.VBACompatibilityMode = True
