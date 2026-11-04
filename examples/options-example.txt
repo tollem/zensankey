@@ -1,0 +1,12 @@
+' ZenSankey options (paste into the Sankey_Options box in PowerPoint, or copy the keys and
+' values into the Sankey_Options sheet in Excel)
+title = Where the revenue goes
+subtitle = Example data, k CHF
+column_titles = Revenue;Gross profit;Operating;Result
+palette = Teal
+node_color = gray
+link_color = source
+link_opacity = 55
+outside_labels = yes
+value_format = standard
+unit = k

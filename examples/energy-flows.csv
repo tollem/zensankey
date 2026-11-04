@@ -1,0 +1,14 @@
+Source,Target,Amount
+Hydro,Electricity,36
+Nuclear,Electricity,24
+Solar,Electricity,6
+Wind,Electricity,2
+Gas,Heat,30
+Oil,Heat,22
+Oil,Transport,40
+Electricity,Households,28
+Electricity,Industry,24
+Electricity,Services,16
+Heat,Households,32
+Heat,Industry,20
+Transport,Mobility,40

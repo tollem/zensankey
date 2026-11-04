@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="930" height="470" font-family="Arial, Helvetica, sans-serif" font-size="11"><rect width="100%" height="100%" fill="white"/>
+<text x="150" y="28" font-size="15" font-weight="bold" fill="#1C2B2D">Income statement</text><text x="150" y="46" font-size="11" font-style="italic" fill="#6E787C">Example: where the revenue goes (amounts in kCHF)</text>
+<text x="157.0" y="62" text-anchor="middle" font-size="9" font-weight="bold" fill="#6E787C">REVENUE</text>
+<text x="352.33333333333337" y="62" text-anchor="middle" font-size="9" font-weight="bold" fill="#6E787C">GROSS PROFIT</text>
+<text x="547.6666666666667" y="62" text-anchor="middle" font-size="9" font-weight="bold" fill="#6E787C">OPERATING</text>
+<text x="743.0" y="62" text-anchor="middle" font-size="9" font-weight="bold" fill="#6E787C">RESULT</text>
+<g transform="translate(150,70)">
+<path d="M14.0,194.5 C300.0,194.5 300.0,129.0 586.0,129.0 L586.0,259.5 C300.0,259.5 300.0,325.0 14.0,325.0 Z" fill="#E34948" fill-opacity="0.5"/>
+<path d="M14.0,35.0 C104.65,35.0 104.65,100.3 195.3,100.3 L195.3,259.8 C104.65,259.8 104.65,194.5 14.0,194.5 Z" fill="#1BAF7A" fill-opacity="0.5"/>
+<path d="M209.3,100.3 C300.0,100.3 300.0,93.3 390.7,93.3 L390.7,180.3 C300.0,180.3 300.0,187.3 209.3,187.3 Z" fill="#E34948" fill-opacity="0.5"/>
+<path d="M209.3,187.3 C300.0,187.3 300.0,194.3 390.7,194.3 L390.7,266.8 C300.0,266.8 300.0,259.8 209.3,259.8 Z" fill="#1BAF7A" fill-opacity="0.5"/>
+<path d="M404.7,93.3 C495.35,93.3 495.35,0.0 586.0,0.0 L586.0,34.8 C495.35,34.8 495.35,128.1 404.7,128.1 Z" fill="#E34948" fill-opacity="0.5"/>
+<path d="M404.7,128.1 C495.35,128.1 495.35,48.8 586.0,48.8 L586.0,80.69999999999999 C495.35,80.69999999999999 495.35,160.0 404.7,160.0 Z" fill="#E34948" fill-opacity="0.5"/>
+<path d="M404.7,159.9 C495.35,159.9 495.35,94.7 586.0,94.7 L586.0,115.0 C495.35,115.0 495.35,180.20000000000002 404.7,180.20000000000002 Z" fill="#E34948" fill-opacity="0.5"/>
+<path d="M404.7,194.3 C495.35,194.3 495.35,273.5 586.0,273.5 L586.0,290.9 C495.35,290.9 495.35,211.70000000000002 404.7,211.70000000000002 Z" fill="#E34948" fill-opacity="0.5"/>
+<path d="M404.7,211.6 C495.35,211.6 495.35,304.9 586.0,304.9 L586.0,360.0 C495.35,360.0 495.35,266.7 404.7,266.7 Z" fill="#1BAF7A" fill-opacity="0.5"/>
+<rect x="0.0" y="35.0" width="14" height="290.0" fill="#465054"/>
+<text x="-6.0" y="178.0" text-anchor="end" fill="#1C2B2D">Revenue</text><text x="-6.0" y="191.0" text-anchor="end" font-weight="bold" fill="#465054">1,000</text>
+<rect x="586.0" y="129.0" width="14" height="130.5" fill="#465054"/>
+<text x="606.0" y="192.25" text-anchor="start" fill="#1C2B2D">Cost of sales</text><text x="606.0" y="205.25" text-anchor="start" font-weight="bold" fill="#465054">450</text>
+<rect x="195.3" y="100.3" width="14" height="159.5" fill="#465054"/>
+<text x="215.3" y="178.05" text-anchor="start" fill="#1C2B2D">Gross profit</text><text x="215.3" y="191.05" text-anchor="start" font-weight="bold" fill="#465054">550</text>
+<rect x="390.7" y="93.3" width="14" height="87.0" fill="#465054"/>
+<text x="410.7" y="134.8" text-anchor="start" fill="#1C2B2D">Operating expenses</text><text x="410.7" y="147.8" text-anchor="start" font-weight="bold" fill="#465054">300</text>
+<rect x="390.7" y="194.3" width="14" height="72.5" fill="#465054"/>
+<text x="410.7" y="228.55" text-anchor="start" fill="#1C2B2D">Operating profit</text><text x="410.7" y="241.55" text-anchor="start" font-weight="bold" fill="#465054">250</text>
+<rect x="586.0" y="0.0" width="14" height="34.8" fill="#465054"/>
+<text x="606.0" y="15.399999999999999" text-anchor="start" fill="#1C2B2D">R&amp;D</text><text x="606.0" y="28.4" text-anchor="start" font-weight="bold" fill="#465054">120</text>
+<rect x="586.0" y="48.8" width="14" height="31.9" fill="#465054"/>
+<text x="606.0" y="62.75" text-anchor="start" fill="#1C2B2D">Sales &amp; marketing</text><text x="606.0" y="75.75" text-anchor="start" font-weight="bold" fill="#465054">110</text>
+<rect x="586.0" y="94.7" width="14" height="20.3" fill="#465054"/>
+<text x="606.0" y="102.85000000000001" text-anchor="start" fill="#1C2B2D">General &amp; admin</text><text x="606.0" y="115.85000000000001" text-anchor="start" font-weight="bold" fill="#465054">70</text>
+<rect x="586.0" y="273.5" width="14" height="17.4" fill="#465054"/>
+<text x="606.0" y="280.2" text-anchor="start" fill="#1C2B2D">Taxes</text><text x="606.0" y="293.2" text-anchor="start" font-weight="bold" fill="#465054">60</text>
+<rect x="586.0" y="304.9" width="14" height="55.1" fill="#465054"/>
+<text x="606.0" y="330.45" text-anchor="start" fill="#1C2B2D">Net profit</text><text x="606.0" y="343.45" text-anchor="start" font-weight="bold" fill="#465054">190</text>
+</g></svg>

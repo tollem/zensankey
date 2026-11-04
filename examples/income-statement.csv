@@ -1,0 +1,10 @@
+Source,Target,Amount,Color
+Revenue,Cost of sales,450,#E34948
+Revenue,Gross profit,550,#1BAF7A
+Gross profit,Operating expenses,300,#E34948
+Gross profit,Operating profit,250,#1BAF7A
+Operating expenses,R&D,120,#E34948
+Operating expenses,Sales & marketing,110,#E34948
+Operating expenses,General & admin,70,#E34948
+Operating profit,Taxes,60,#E34948
+Operating profit,Net profit,190,#1BAF7A
